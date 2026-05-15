@@ -681,7 +681,7 @@
         <div class="category-line" style="background:#a855f7;"></div>
       </div>
 
-      <a class="link-card service-card" href="https://instagram.com/cankrmn0" target="_blank" rel="noopener">
+      <div class="link-card service-card" onclick="openChat()" style="cursor:pointer;">
         <div class="card-icon" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="1" fill="#a855f7" stroke="none"/><circle cx="15" cy="10" r="1" fill="#a855f7" stroke="none"/><path d="M7 7c1-1 3-1.5 5-1.5S16 6 17 7"/></svg>
         </div>
@@ -690,9 +690,9 @@
           <div class="card-sub" data-tr="Özel bot geliştirme · Komut & otomasyon" data-en="Custom bot development · Commands & automation">Özel bot geliştirme · Komut & otomasyon</div>
         </div>
         <span class="card-arrow" style="color:#555;">›</span>
-      </a>
+      </div>
 
-      <a class="link-card service-card" href="https://instagram.com/cankrmn0" target="_blank" rel="noopener">
+      <div class="link-card service-card" onclick="openChat()" style="cursor:pointer;">
         <div class="card-icon" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
         </div>
@@ -701,9 +701,9 @@
           <div class="card-sub" data-tr="Modern & responsive site geliştirme" data-en="Modern & responsive web development">Modern & responsive site geliştirme</div>
         </div>
         <span class="card-arrow" style="color:#555;">›</span>
-      </a>
+      </div>
 
-      <a class="link-card service-card" href="https://instagram.com/cankrmn0" target="_blank" rel="noopener">
+      <div class="link-card service-card" onclick="openChat()" style="cursor:pointer;">
         <div class="card-icon" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         </div>
@@ -712,9 +712,9 @@
           <div class="card-sub" data-tr="Üçüncü parti servis bağlantıları" data-en="Third-party service integrations">Üçüncü parti servis bağlantıları</div>
         </div>
         <span class="card-arrow" style="color:#555;">›</span>
-      </a>
+      </div>
 
-      <a class="link-card service-card" href="https://instagram.com/cankrmn0" target="_blank" rel="noopener">
+      <div class="link-card service-card" onclick="openChat()" style="cursor:pointer;">
         <div class="card-icon" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
         </div>
@@ -831,6 +831,12 @@
     });
 
     function openAdmin() {}
+
+    function openChat() {
+      if (window.$crisp) {
+        window.$crisp.push(['do', 'chat:open']);
+      }
+    }
 
     // ── Dil Değiştirici ──
     function setLang(lang) {
