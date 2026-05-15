@@ -405,57 +405,12 @@
     @keyframes eq { to { height: 14px; } }
 
     /* ── Preloader ── */
-    #preloader {
-      position: fixed; inset: 0; z-index: 9999;
-      background: #0a0a0a;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
-      transition: opacity .6s ease, visibility .6s ease;
-    }
-
-    #preloader.hide { opacity: 0; visibility: hidden; }
-
-    .pre-logo { font-family: 'Orbitron', sans-serif; font-size: 2.4rem; font-weight: 900; letter-spacing: 8px; color: #fff; animation: preLogoFlash 1.8s ease forwards; }
-
-    .pre-bar-wrap { width: 160px; height: 2px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
-    .pre-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #00ccff, #ff0000); border-radius: 2px; animation: preBarFill 1.6s ease forwards; }
-
-    .pre-sub { font-family: 'Rajdhani', sans-serif; font-size: 0.7rem; letter-spacing: 4px; color: #333; text-transform: uppercase; }
-
-    .pre-enter {
-      display: none; position: relative;
-      background: transparent; border: 1px solid rgba(0,204,255,0.5);
-      border-radius: 4px; padding: 12px 48px;
-      color: #00ccff; font-family: 'Orbitron', sans-serif;
-      font-size: 0.85rem; letter-spacing: 6px; cursor: pointer;
-      transition: box-shadow .3s, border-color .3s; overflow: hidden;
-    }
-
-    .pre-enter:hover { border-color: #00ccff; box-shadow: 0 0 20px rgba(0,204,255,0.4), 0 0 60px rgba(0,204,255,0.15); }
-
-    .pre-enter-glow {
-      position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(0,204,255,0.08), transparent);
-      transform: translateX(-100%); transition: transform .4s ease;
-    }
-
-    .pre-enter:hover .pre-enter-glow { transform: translateX(100%); }
-
-    @keyframes preLogoFlash {
-      0%   { opacity: 0; text-shadow: none; transform: scale(0.85); }
-      40%  { opacity: 1; text-shadow: 0 0 20px #00ccff, 0 0 60px #00ccff, 0 0 120px rgba(0,204,255,0.5); transform: scale(1.05); }
-      70%  { text-shadow: 0 0 10px #ff0000, 0 0 40px #ff0000; }
-      100% { opacity: 1; text-shadow: 0 0 10px #00ccff, 0 0 30px #00ccff, 0 0 60px rgba(0,204,255,0.4); transform: scale(1); }
-    }
-
-    @keyframes preBarFill { 0% { width: 0%; } 100% { width: 100%; } }
 
     /* ── Page entry ── */
-    .container { opacity: 0; }
-    .container.loaded { animation: pageFadeIn .5s ease forwards; }
+    .container { animation: pageFadeIn .5s ease forwards; }
     @keyframes pageFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .profile { opacity: 0; }
-    .profile.loaded { animation: slideDown .5s ease .1s forwards; }
+    .profile { animation: slideDown .5s ease .1s forwards; }
     .stagger { opacity: 0; }
     .stagger.loaded { animation: slideDown .4s ease forwards; }
     @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
@@ -561,16 +516,6 @@
   </style>
 </head>
 <body>
-
-  <div id="preloader">
-    <div class="pre-logo">RYNXIFY</div>
-    <div class="pre-bar-wrap"><div class="pre-bar"></div></div>
-    <div class="pre-sub" id="preSub">LOADING...</div>
-    <button class="pre-enter" id="preEnter" onclick="enterSite()">
-      <span>ENTER</span>
-      <div class="pre-enter-glow"></div>
-    </button>
-  </div>
 
   <video id="bgVideo" autoplay muted loop playsinline src="assets/background.mp4"></video>
   <div id="bgOverlay"></div>
@@ -797,31 +742,12 @@
       return m + ':' + (sec < 10 ? '0' : '') + sec;
     }
 
-    // ── Preloader ──
+    // ── Particles ──
     window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.getElementById('preSub').textContent = 'CLICK TO ENTER';
-        const btn = document.getElementById('preEnter');
-        btn.style.display = 'block';
-        btn.style.animation = 'preFadeIn .6s ease forwards';
-      }, 2000);
-    });
-
-    function enterSite() {
-      const pre = document.getElementById('preloader');
-      pre.classList.add('hide');
-
-      // sayfa animasyonları
-      document.querySelector('.container').classList.add('loaded');
-      document.querySelector('.profile').classList.add('loaded');
       document.querySelectorAll('.stagger').forEach((el, i) => {
         setTimeout(() => el.classList.add('loaded'), i * 100);
       });
-
-      pre.addEventListener('transitionend', () => pre.remove(), { once: true });
-    }
-
-    // ── Particles ──
+    });
     (function() {
       const canvas = document.getElementById('particleCanvas');
       const ctx = canvas.getContext('2d');
