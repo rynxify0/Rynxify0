@@ -504,6 +504,29 @@
       .card-title { font-size: 0.68rem; }
     }
 
+    /* ── Lang Toggle ── */
+    .lang-toggle {
+      position: fixed; top: 16px; right: 16px; z-index: 100;
+      display: flex; align-items: center; gap: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0,204,255,0.2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .lang-btn {
+      background: none; border: none;
+      color: #555; font-family: 'Orbitron', sans-serif;
+      font-size: 0.6rem; letter-spacing: 2px;
+      padding: 6px 12px; cursor: pointer;
+      transition: color .2s, background .2s;
+    }
+    .lang-btn.active {
+      background: rgba(0,204,255,0.15);
+      color: #00ccff;
+    }
+    .lang-btn:hover:not(.active) { color: #aaa; }
+
     /* Hint */
     .admin-hint { position: fixed; bottom: 16px; right: 16px; font-size: 0.65rem; letter-spacing: 2px; color: #1a1a1a; z-index: 20; text-transform: uppercase; cursor: pointer; transition: color .2s; }
     .admin-hint:hover { color: #333; }
@@ -546,7 +569,7 @@
       <div class="now-playing" id="nowPlaying">
         <div class="np-spotify-header">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="#1ed760"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-          <span class="np-spotify-label">ŞUAN DİNLİYORUM</span>
+          <span class="np-spotify-label" data-tr="ŞUAN DİNLİYORUM" data-en="NOW PLAYING">ŞUAN DİNLİYORUM</span>
         </div>
         <div class="np-top">
           <div class="np-cover-wrap">
@@ -578,7 +601,7 @@
 
     <div class="category-block stagger">
       <div class="category-header">
-        <span class="category-label social">// Sosyal Medya</span>
+        <span class="category-label social" data-tr="// Sosyal Medya" data-en="// Social Media">// Sosyal Medya</span>
         <div class="category-line social"></div>
       </div>
 
@@ -599,7 +622,7 @@
         </div>
         <div class="card-text">
           <div class="card-title">DISCORD</div>
-          <div class="card-sub" id="discordSub">rynxify — tıkla kopyala</div>
+          <div class="card-sub" id="discordSub" data-tr="rynxify — tıkla kopyala" data-en="rynxify — click to copy">rynxify — tıkla kopyala</div>
         </div>
         <span class="card-arrow">⎘</span>
       </div>
@@ -610,7 +633,7 @@
         </div>
         <div class="card-text">
           <div class="card-title">JOIN THE VOID</div>
-          <div class="card-sub">Sunucuya katıl</div>
+          <div class="card-sub" data-tr="Sunucuya katıl" data-en="Join the server">Sunucuya katıl</div>
         </div>
         <span class="card-arrow">›</span>
       </a>
@@ -621,7 +644,7 @@
 
     <div class="category-block stagger">
       <div class="category-header">
-        <span class="category-label gaming">// Oyun</span>
+        <span class="category-label gaming" data-tr="// Oyun" data-en="// Gaming">// Oyun</span>
         <div class="category-line gaming"></div>
       </div>
 
@@ -670,7 +693,7 @@
         </div>
         <div class="card-text">
           <div class="card-title" style="color:#fff;">DISCORD BOT</div>
-          <div class="card-sub">Özel bot geliştirme · Komut & otomasyon</div>
+          <div class="card-sub" data-tr="Özel bot geliştirme · Komut & otomasyon" data-en="Custom bot development · Commands & automation">Özel bot geliştirme · Komut & otomasyon</div>
         </div>
         <span class="card-arrow" style="color:#555;">›</span>
       </a>
@@ -681,7 +704,7 @@
         </div>
         <div class="card-text">
           <div class="card-title" style="color:#fff;">WEB TASARIM</div>
-          <div class="card-sub">Modern & responsive site geliştirme</div>
+          <div class="card-sub" data-tr="Modern & responsive site geliştirme" data-en="Modern & responsive web development">Modern & responsive site geliştirme</div>
         </div>
         <span class="card-arrow" style="color:#555;">›</span>
       </a>
@@ -692,7 +715,7 @@
         </div>
         <div class="card-text">
           <div class="card-title" style="color:#fff;">API ENTEGRASYONU</div>
-          <div class="card-sub">Üçüncü parti servis bağlantıları</div>
+          <div class="card-sub" data-tr="Üçüncü parti servis bağlantıları" data-en="Third-party service integrations">Üçüncü parti servis bağlantıları</div>
         </div>
         <span class="card-arrow" style="color:#555;">›</span>
       </a>
@@ -703,7 +726,7 @@
         </div>
         <div class="card-text">
           <div class="card-title" style="color:#fff;">SUNUCU BAKIMI</div>
-          <div class="card-sub">VPS kurulum · Yönetim & monitoring</div>
+          <div class="card-sub" data-tr="VPS kurulum · Yönetim & monitoring" data-en="VPS setup · Management & monitoring">VPS kurulum · Yönetim & monitoring</div>
         </div>
         <span class="card-arrow" style="color:#555;">›</span>
       </a>
@@ -711,6 +734,11 @@
     </div>
 
     <p class="footer">© 2026 RYNXIFY</p>
+  </div>
+
+  <div class="lang-toggle">
+    <button class="lang-btn active" id="btnTR" onclick="setLang('tr')">TR</button>
+    <button class="lang-btn" id="btnEN" onclick="setLang('en')">EN</button>
   </div>
 
   <div class="admin-hint" onclick="openAdmin()">CTRL+SHIFT+A</div>
@@ -809,6 +837,22 @@
     });
 
     function openAdmin() {}
+
+    // ── Dil Değiştirici ──
+    function setLang(lang) {
+      document.querySelectorAll('[data-tr]').forEach(el => {
+        el.textContent = lang === 'tr' ? el.dataset.tr : el.dataset.en;
+      });
+      document.getElementById('btnTR').classList.toggle('active', lang === 'tr');
+      document.getElementById('btnEN').classList.toggle('active', lang === 'en');
+      localStorage.setItem('lang', lang);
+    }
+
+    // Sayfa açılınca kaydedilen dili uygula
+    (function() {
+      const saved = localStorage.getItem('lang') || 'tr';
+      if (saved === 'en') setLang('en');
+    })();
 
     // ── Lanyard / Spotify Gerçek Zamanlı ──
     (function() {
