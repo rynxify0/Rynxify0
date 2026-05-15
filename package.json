@@ -1,0 +1,17 @@
+{
+  "name": "rynxify0",
+  "version": "1.0.0",
+  "description": "Personal landing page with Vercel Web Analytics",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
