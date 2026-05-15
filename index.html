@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RYNXIFY</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: #0a0a0a;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Rajdhani', sans-serif;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,204,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,204,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 1;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+      pointer-events: none; z-index: 10;
+    }
+
+    /* ── Background ── */
+    #bgVideo {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; z-index: 0;
+      pointer-events: none;
+      will-change: transform;
+    }
+
+    #bgOverlay {
+      position: fixed; inset: 0; z-index: 1;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%);
+      pointer-events: none;
+    }
+
+    /* ── Particle Canvas ── */
+    #particleCanvas { position: fixed; inset: 0; z-index: 2; pointer-events: none; will-change: contents; }
+
+    /* ── Main ── */
+    .container {
+      position: relative; z-index: 3;
+      width: 100%; max-width: 480px;
+      padding: 40px 24px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+
+    .profile { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 12px; }
+
+    .avatar-wrapper { position: relative; width: 110px; height: 110px; }
+
+    .avatar-wrapper::before, .avatar-wrapper::after {
+      content: '';
+      position: absolute; inset: -4px; border-radius: 50%;
+      background: conic-gradient(#00ccff, #ff0000, #00ccff);
+      animation: spin 4s linear infinite; z-index: -1;
+    }
+
+    .avatar-wrapper::after { filter: blur(8px); opacity: 0.6; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .avatar-img {
+      width: 110px; height: 110px; border-radius: 50%;
+      object-fit: cover; border: 3px solid #0a0a0a;
+      display: block; background: #111;
+    }
+
+    .avatar-placeholder {
+      width: 110px; height: 110px; border-radius: 50%;
+      background: #111; border: 3px solid #0a0a0a;
+      display: flex; align-items: center; justify-content: center;
+      color: #333; font-size: 42px;
+    }
+
+    .name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem; font-weight: 900; letter-spacing: 6px; color: #fff;
+      text-shadow: 0 0 10px #00ccff, 0 0 30px #00ccff, 0 0 60px rgba(0,204,255,0.4);
+    }
+
+    .tagline { font-size: 0.85rem; font-weight: 600; letter-spacing: 2px; color: #555; text-align: center; }
+
+    /* Now Playing Card — Spotify Style */
+    .now-playing {
+      display: none; width: 100%; max-width: 360px;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(30,215,96,0.25);
+      border-radius: 14px;
+      padding: 14px 16px 12px;
+      animation: npFadeIn .4s ease forwards;
+      flex-direction: column; gap: 10px;
+      box-shadow: 0 0 24px rgba(30,215,96,0.08);
+    }
+    .now-playing.active { display: flex; }
+
+    @keyframes npFadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Spotify header label */
+    .np-spotify-header {
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 2px;
+    }
+    .np-spotify-label {
+      font-size: 0.58rem; letter-spacing: 2px; text-transform: uppercase;
+      color: #1ed760; font-weight: 600;
+    }
+
+    .np-top { display: flex; align-items: center; gap: 12px; }
+
+    /* Vinyl cover */
+    .np-cover-wrap {
+      position: relative; width: 52px; height: 52px; flex-shrink: 0;
+    }
+    .np-cover-vinyl {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: radial-gradient(circle at 50% 50%, #222 18%, #111 18%, #111 30%, #1a1a1a 30%, #1a1a1a 42%, #111 42%, #111 54%, #1a1a1a 54%);
+      border: 2px solid #333;
+      display: flex; align-items: center; justify-content: center;
+      animation: vinylSpin 4s linear infinite;
+      animation-play-state: paused;
+      position: relative; overflow: hidden;
+    }
+    .np-cover-vinyl.spinning { animation-play-state: running; }
+    .np-cover-vinyl img {
+      width: 28px; height: 28px; border-radius: 50%;
+      object-fit: cover; position: absolute;
+    }
+    .np-cover-vinyl-hole {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #0a0a0a; position: absolute; z-index: 2;
+    }
+    .np-cover-vinyl-emoji {
+      font-size: 18px; position: absolute; z-index: 1;
+      user-select: none;
+    }
+    @keyframes vinylSpin { to { transform: rotate(360deg); } }
+
+    /* Fallback emoji cover */
+    .np-cover {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: #111; border: 2px solid #333;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+
+    .np-info { flex: 1; min-width: 0; }
+    .np-title { font-family: 'Orbitron', sans-serif; font-size: 0.75rem; letter-spacing: 1px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .np-artist { font-size: 0.7rem; color: #888; letter-spacing: 1px; margin-top: 2px; }
+
+    .np-controls { display: flex; align-items: center; gap: 10px; }
+
+    .np-btn {
+      background: none; border: none; color: #555;
+      cursor: pointer; font-size: 14px; padding: 4px;
+      transition: color .2s, transform .2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .np-btn:hover { color: #1ed760; transform: scale(1.1); }
+
+    /* Play button — animated circle */
+    .np-btn.play {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: #1ed760; color: #000;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .2s, background .2s, box-shadow .2s;
+      box-shadow: 0 0 0 0 rgba(30,215,96,0.4);
+    }
+    .np-btn.play:hover {
+      transform: scale(1.12);
+      background: #1fdf64;
+      box-shadow: 0 0 16px rgba(30,215,96,0.5);
+    }
+    .np-btn.play.playing {
+      animation: playPulse 1.8s ease-in-out infinite;
+    }
+    @keyframes playPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(30,215,96,0.4); }
+      50%       { box-shadow: 0 0 0 8px rgba(30,215,96,0); }
+    }
+
+    /* EQ bars inside now-playing */
+    .np-eq { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+    .np-eq span { width: 3px; background: #1ed760; border-radius: 1px; animation: eq 0.8s ease-in-out infinite alternate; }
+    .np-eq span:nth-child(1) { height: 4px;  animation-delay: 0s;    animation-duration: 0.6s; }
+    .np-eq span:nth-child(2) { height: 10px; animation-delay: 0.15s; animation-duration: 0.8s; }
+    .np-eq span:nth-child(3) { height: 6px;  animation-delay: 0.3s;  animation-duration: 0.5s; }
+    .np-eq span:nth-child(4) { height: 12px; animation-delay: 0.1s;  animation-duration: 0.9s; }
+    .np-eq.paused span { animation-play-state: paused; }
+
+    .np-progress { display: flex; align-items: center; gap: 8px; }
+    .np-time { font-size: 0.6rem; color: #555; letter-spacing: 1px; min-width: 30px; }
+    .np-time.right { text-align: right; }
+
+    .np-track {
+      flex: 1; height: 3px; background: rgba(255,255,255,0.1);
+      border-radius: 2px; cursor: pointer; position: relative;
+      transition: height .15s;
+    }
+    .np-track:hover { height: 5px; }
+
+    .np-fill {
+      height: 100%; background: #1ed760;
+      border-radius: 2px; width: 0%; transition: width .5s linear;
+      pointer-events: none;
+    }
+
+    .np-track:hover .np-fill { background: #1fdf64; }
+
+    .divider {
+      width: 100%; height: 1px;
+      background: linear-gradient(90deg, transparent, #00ccff, #ff0000, transparent);
+      margin: 8px 0 16px; opacity: 0.5;
+    }
+
+    /* ── Cards ── */
+    .link-card {
+      width: 100%;
+      display: flex; align-items: center; gap: 16px;
+      padding: 18px 20px;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,204,255,0.3);
+      border-radius: 12px;
+      text-decoration: none; color: #fff;
+      position: relative; overflow: hidden;
+      transition: transform .25s, border-color .25s, box-shadow .25s, background .25s;
+      will-change: transform;
+    }
+
+    .link-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(0,204,255,0.06));
+      opacity: 0; transition: opacity .25s;
+    }
+
+    .link-card:hover {
+      transform: translateX(6px) scale(1.02);
+      background: rgba(255,255,255,0.09);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-color: rgba(0,204,255,0.7);
+      box-shadow: 0 0 16px rgba(0,204,255,0.35), 0 0 48px rgba(0,204,255,0.15), inset 0 0 20px rgba(0,204,255,0.06);
+      animation: borderPulse 1.2s ease-in-out infinite;
+    }
+
+    .link-card:hover::before { opacity: 1; }
+
+    .link-card.red:hover {
+      background: rgba(255,255,255,0.09);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-color: rgba(255,0,0,0.7);
+      box-shadow: 0 0 16px rgba(255,0,0,0.35), 0 0 48px rgba(255,0,0,0.15), inset 0 0 20px rgba(255,0,0,0.06);
+      animation: borderPulseRed 1.2s ease-in-out infinite;
+    }
+
+    .link-card.red::before { background: linear-gradient(90deg, transparent, rgba(255,0,0,0.06)); }
+    .link-card.no-click { cursor: default; }
+    .link-card.no-click:hover { transform: none; border-color: rgba(255,0,0,0.15); box-shadow: none; animation: none; }
+    .link-card.no-click:hover::before { opacity: 0; }
+
+    .card-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .card-icon.blue { background: rgba(0,204,255,0.1); border: 1px solid rgba(0,204,255,0.3); }
+    .card-icon.red  { background: rgba(255,0,0,0.1);   border: 1px solid rgba(255,0,0,0.3); }
+    .card-text { flex: 1; }
+    .card-title { font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; color: #fff; }
+    .card-sub { font-size: 0.85rem; color: #aaa; margin-top: 2px; letter-spacing: 1px; }
+    .card-arrow { font-size: 18px; color: #333; transition: color .25s, transform .25s; }
+    .link-card:hover .card-arrow { color: #00ccff; transform: translateX(4px); }
+    .link-card.red:hover .card-arrow { color: #ff0000; }
+
+    /* ── Categories ── */
+    .category-block { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+    .category-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .category-label { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; white-space: nowrap; }
+    .category-label.social { color: #00ccff; text-shadow: 0 0 8px rgba(0,204,255,0.6); }
+    .category-label.gaming { color: #ff0000; text-shadow: 0 0 8px rgba(255,0,0,0.6); }
+    .category-line { flex: 1; height: 1px; opacity: 0.2; }
+    .category-line.social { background: #00ccff; }
+    .category-line.gaming { background: #ff0000; }
+
+    .footer { margin-top: 20px; font-size: 0.7rem; letter-spacing: 3px; color: #222; text-transform: uppercase; }
+
+    /* ── Views Counter ── */
+    .views-counter {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 20px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0,204,255,0.25);
+      border-radius: 999px;
+      margin-top: 8px;
+    }
+
+    .views-eye { font-size: 14px; }
+
+    #viewCount {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem; font-weight: 700;
+      color: #00ccff;
+      letter-spacing: 2px;
+    }
+
+    .views-label {
+      font-size: 0.65rem; letter-spacing: 3px;
+      color: #666; text-transform: uppercase;
+    }
+
+    /* ── Music Player Bar ── */
+    .music-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(0,204,255,0.15);
+      padding: 10px 20px;
+      display: none; flex-direction: column; gap: 6px;
+      transition: transform .4s ease;
+    }
+
+    .music-bar.active { display: flex; }
+
+    .music-bar-top { display: flex; align-items: center; gap: 12px; }
+
+    .music-bar-cover {
+      width: 40px; height: 40px; border-radius: 6px;
+      background: #111; border: 1px solid rgba(0,204,255,0.2);
+      object-fit: cover; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #333; font-size: 18px;
+    }
+
+    .music-bar-cover img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+
+    .music-bar-info { flex: 1; min-width: 0; }
+    .music-bar-title { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; letter-spacing: 2px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .music-bar-artist { font-size: 0.7rem; color: #555; letter-spacing: 1px; margin-top: 2px; }
+
+    .music-bar-controls { display: flex; align-items: center; gap: 16px; }
+
+    .mbc-btn {
+      background: none; border: none; color: #555;
+      cursor: pointer; font-size: 16px; padding: 4px;
+      transition: color .2s, transform .2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .mbc-btn:hover { color: #00ccff; transform: scale(1.15); }
+    .mbc-btn.play { color: #fff; font-size: 20px; }
+    .mbc-btn.play:hover { color: #00ccff; }
+
+    .music-bar-progress { display: flex; align-items: center; gap: 8px; }
+
+    .progress-time { font-size: 0.65rem; color: #444; letter-spacing: 1px; min-width: 32px; }
+    .progress-time.right { text-align: right; }
+
+    .progress-track {
+      flex: 1; height: 3px; background: rgba(255,255,255,0.1);
+      border-radius: 2px; cursor: pointer; position: relative;
+    }
+
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, #00ccff, #0088aa);
+      border-radius: 2px; width: 0%; transition: width .5s linear;
+      pointer-events: none;
+    }
+
+    .progress-track:hover .progress-fill { background: linear-gradient(90deg, #00ccff, #00eeff); }
+
+    /* hide old player */
+    .music-player { display: none !important; }
+
+    .eq { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+    .eq span { width: 3px; background: #00ccff; border-radius: 1px; animation: eq 0.8s ease-in-out infinite alternate; }
+    .eq span:nth-child(1) { height: 4px;  animation-delay: 0s;    animation-duration: 0.6s; }
+    .eq span:nth-child(2) { height: 10px; animation-delay: 0.15s; animation-duration: 0.8s; }
+    .eq span:nth-child(3) { height: 6px;  animation-delay: 0.3s;  animation-duration: 0.5s; }
+    .eq span:nth-child(4) { height: 12px; animation-delay: 0.1s;  animation-duration: 0.9s; }
+    .eq.paused span { animation-play-state: paused; }
+    @keyframes eq { to { height: 14px; } }
+
+    /* ── Preloader ── */
+    #preloader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #0a0a0a;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+      transition: opacity .6s ease, visibility .6s ease;
+    }
+
+    #preloader.hide { opacity: 0; visibility: hidden; }
+
+    .pre-logo { font-family: 'Orbitron', sans-serif; font-size: 2.4rem; font-weight: 900; letter-spacing: 8px; color: #fff; animation: preLogoFlash 1.8s ease forwards; }
+
+    .pre-bar-wrap { width: 160px; height: 2px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+    .pre-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #00ccff, #ff0000); border-radius: 2px; animation: preBarFill 1.6s ease forwards; }
+
+    .pre-sub { font-family: 'Rajdhani', sans-serif; font-size: 0.7rem; letter-spacing: 4px; color: #333; text-transform: uppercase; }
+
+    .pre-enter {
+      display: none; position: relative;
+      background: transparent; border: 1px solid rgba(0,204,255,0.5);
+      border-radius: 4px; padding: 12px 48px;
+      color: #00ccff; font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem; letter-spacing: 6px; cursor: pointer;
+      transition: box-shadow .3s, border-color .3s; overflow: hidden;
+    }
+
+    .pre-enter:hover { border-color: #00ccff; box-shadow: 0 0 20px rgba(0,204,255,0.4), 0 0 60px rgba(0,204,255,0.15); }
+
+    .pre-enter-glow {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(0,204,255,0.08), transparent);
+      transform: translateX(-100%); transition: transform .4s ease;
+    }
+
+    .pre-enter:hover .pre-enter-glow { transform: translateX(100%); }
+
+    @keyframes preLogoFlash {
+      0%   { opacity: 0; text-shadow: none; transform: scale(0.85); }
+      40%  { opacity: 1; text-shadow: 0 0 20px #00ccff, 0 0 60px #00ccff, 0 0 120px rgba(0,204,255,0.5); transform: scale(1.05); }
+      70%  { text-shadow: 0 0 10px #ff0000, 0 0 40px #ff0000; }
+      100% { opacity: 1; text-shadow: 0 0 10px #00ccff, 0 0 30px #00ccff, 0 0 60px rgba(0,204,255,0.4); transform: scale(1); }
+    }
+
+    @keyframes preBarFill { 0% { width: 0%; } 100% { width: 100%; } }
+
+    /* ── Page entry ── */
+    .container { opacity: 0; }
+    .container.loaded { animation: pageFadeIn .5s ease forwards; }
+    @keyframes pageFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .profile { opacity: 0; }
+    .profile.loaded { animation: slideDown .5s ease .1s forwards; }
+    .stagger { opacity: 0; }
+    .stagger.loaded { animation: slideDown .4s ease forwards; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+    @keyframes borderPulse {
+      0%, 100% { box-shadow: 0 0 16px rgba(0,204,255,0.35), 0 0 48px rgba(0,204,255,0.15); }
+      50%       { box-shadow: 0 0 32px rgba(0,204,255,0.8), 0 0 80px rgba(0,204,255,0.35); }
+    }
+
+    @keyframes borderPulseRed {
+      0%, 100% { box-shadow: 0 0 16px rgba(255,0,0,0.35), 0 0 48px rgba(255,0,0,0.15); }
+      50%       { box-shadow: 0 0 32px rgba(255,0,0,0.8), 0 0 80px rgba(255,0,0,0.35); }
+    }
+
+    @keyframes borderPulsePurple {
+      0%, 100% { box-shadow: 0 0 16px rgba(168,85,247,0.35), 0 0 48px rgba(168,85,247,0.15); }
+      50%       { box-shadow: 0 0 32px rgba(168,85,247,0.8), 0 0 80px rgba(168,85,247,0.35); }
+    }
+
+    .service-card { border-color: rgba(168,85,247,0.3); }
+    .service-card::before { background: linear-gradient(90deg, transparent, rgba(168,85,247,0.06)); }
+    .service-card:hover {
+      border-color: rgba(168,85,247,0.7);
+      box-shadow: 0 0 16px rgba(168,85,247,0.35), 0 0 48px rgba(168,85,247,0.15), inset 0 0 20px rgba(168,85,247,0.06);
+      animation: borderPulsePurple 1.2s ease-in-out infinite;
+    }
+    .service-card:hover .card-arrow { color: #a855f7; }
+
+    @media (max-width: 480px) {
+      /* Container */
+      .container { gap: 10px; padding: 32px 16px 40px; }
+
+      /* Avatar */
+      .avatar-wrapper { width: 90px; height: 90px; }
+      .avatar-img { width: 90px; height: 90px; }
+      .avatar-placeholder { width: 90px; height: 90px; font-size: 34px; }
+
+      /* İsim */
+      .name { font-size: 1.6rem; letter-spacing: 4px; }
+
+      /* Now Playing */
+      .now-playing { max-width: 100%; padding: 12px 14px 10px; border-radius: 12px; }
+      .np-cover-vinyl { width: 44px; height: 44px; }
+      .np-cover-vinyl img { width: 24px; height: 24px; }
+      .np-title { font-size: 0.7rem; }
+      .np-artist { font-size: 0.65rem; }
+
+      /* Kartlar */
+      .link-card { padding: 16px 14px; gap: 12px; border-radius: 10px; }
+      .link-card:hover { transform: translateX(3px) scale(1.01); }
+      .card-icon { width: 36px; height: 36px; border-radius: 7px; }
+      .card-title { font-size: 0.72rem; letter-spacing: 1.5px; }
+      .card-sub { font-size: 0.78rem; }
+      .card-arrow { font-size: 16px; }
+
+      /* Kategoriler */
+      .category-block { gap: 10px; }
+      .category-label { font-size: 0.6rem; letter-spacing: 2px; }
+
+      /* Divider */
+      .divider { margin: 4px 0 10px; }
+
+      /* Footer */
+      .footer { color: #444; font-size: 0.65rem; }
+
+      /* Views */
+      .views-counter { border-color: rgba(0,204,255,0.3); padding: 6px 16px; }
+      #viewCount { color: #00ccff; font-size: 0.75rem; }
+      .views-label { color: #888; }
+
+      /* Admin hint gizle */
+      .admin-hint { display: none; }
+    }
+
+    /* Çok küçük ekranlar (375px altı) */
+    @media (max-width: 375px) {
+      .container { padding: 28px 12px 36px; }
+      .name { font-size: 1.4rem; letter-spacing: 3px; }
+      .link-card { padding: 14px 12px; }
+      .card-title { font-size: 0.68rem; }
+    }
+
+    /* Hint */
+    .admin-hint { position: fixed; bottom: 16px; right: 16px; font-size: 0.65rem; letter-spacing: 2px; color: #1a1a1a; z-index: 20; text-transform: uppercase; cursor: pointer; transition: color .2s; }
+    .admin-hint:hover { color: #333; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0,204,255,0.4);
+      border-radius: 999px;
+      padding: 10px 24px;
+      color: #00ccff; font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem; letter-spacing: 2px;
+      z-index: 3000; opacity: 0;
+      transition: opacity .3s, transform .3s;
+      pointer-events: none; white-space: nowrap;
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <div id="preloader">
+    <div class="pre-logo">RYNXIFY</div>
+    <div class="pre-bar-wrap"><div class="pre-bar"></div></div>
+    <div class="pre-sub" id="preSub">LOADING...</div>
+    <button class="pre-enter" id="preEnter" onclick="enterSite()">
+      <span>ENTER</span>
+      <div class="pre-enter-glow"></div>
+    </button>
+  </div>
+
+  <video id="bgVideo" autoplay muted loop playsinline src="assets/background.mp4"></video>
+  <div id="bgOverlay"></div>
+
+  <canvas id="particleCanvas"></canvas>
+
+  <div class="music-player" id="musicPlayer" style="display:none;"></div>
+
+  <div class="container">
+    <div class="profile">
+      <div class="avatar-wrapper">
+        <img class="avatar-img" src="assets/avatar.jpg" alt="Rynxify"
+          onerror="this.outerHTML='<div class=\'avatar-placeholder\'>⚡</div>'" />
+      </div>
+      <h1 class="name">RYNXIFY</h1>
+
+      <div class="now-playing" id="nowPlaying">
+        <div class="np-spotify-header">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="#1ed760"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+          <span class="np-spotify-label">ŞUAN DİNLİYORUM</span>
+        </div>
+        <div class="np-top">
+          <div class="np-cover-wrap">
+            <div class="np-cover-vinyl" id="npVinyl">
+              <img id="npCoverImg" src="" alt="" style="display:none;" />
+              <span class="np-cover-vinyl-emoji" id="npCoverEmoji">🎵</span>
+              <div class="np-cover-vinyl-hole"></div>
+            </div>
+          </div>
+          <div class="np-info">
+            <div class="np-title" id="npTitle">Devil Eyes</div>
+            <div class="np-artist" id="npArtist">ZODIVK</div>
+          </div>
+          <div class="np-controls">
+            <div class="np-eq paused" id="npEq"><span></span><span></span><span></span><span></span></div>
+          </div>
+        </div>
+        <div class="np-progress">
+          <span class="np-time" id="npCurrent">0:00</span>
+          <div class="np-track" onclick="seekTo(event)">
+            <div class="np-fill" id="npFill"></div>
+          </div>
+          <span class="np-time right" id="npDuration">0:00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider stagger"></div>
+
+    <div class="category-block stagger">
+      <div class="category-header">
+        <span class="category-label social">// Sosyal Medya</span>
+        <div class="category-line social"></div>
+      </div>
+
+      <a class="link-card" href="https://instagram.com/cankrmn0" target="_blank" rel="noopener">
+        <div class="card-icon blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00ccff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#00ccff" stroke="none"/></svg>
+        </div>
+        <div class="card-text">
+          <div class="card-title">INSTAGRAM</div>
+          <div class="card-sub">@cankrmn0</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+
+      <div class="link-card" onclick="copyDiscord()" style="cursor:pointer;">
+        <div class="card-icon blue" style="display:flex;align-items:center;justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 127.14 96.36" fill="#00ccff" xmlns="http://www.w3.org/2000/svg"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+        </div>
+        <div class="card-text">
+          <div class="card-title">DISCORD</div>
+          <div class="card-sub" id="discordSub">rynxify — tıkla kopyala</div>
+        </div>
+        <span class="card-arrow">⎘</span>
+      </div>
+
+      <a class="link-card" href="https://discord.gg/MVDsuz2f8T" target="_blank" rel="noopener">
+        <div class="card-icon blue" style="display:flex;align-items:center;justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 127.14 96.36" fill="#00ccff" xmlns="http://www.w3.org/2000/svg"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+        </div>
+        <div class="card-text">
+          <div class="card-title">JOIN THE VOID</div>
+          <div class="card-sub">Sunucuya katıl</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+
+
+
+    </div>
+
+    <div class="category-block stagger">
+      <div class="category-header">
+        <span class="category-label gaming">// Oyun</span>
+        <div class="category-line gaming"></div>
+      </div>
+
+      <a class="link-card" href="https://steamcommunity.com/profiles/76561199444855740" target="_blank" rel="noopener">
+        <div class="card-icon blue">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#00ccff" xmlns="http://www.w3.org/2000/svg"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.497 1.009 2.455-.397.957-1.494 1.409-2.455 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"/></svg>
+        </div>
+        <div class="card-text">
+          <div class="card-title">STEAM</div>
+          <div class="card-sub">rynxify</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+
+      <div class="link-card red no-click" onclick="copyRiotId('Moirai#0000')" style="cursor:pointer;">
+        <div class="card-icon red">
+          <img src="assets/riot-games.jpg" width="20" height="20" style="border-radius:50%;object-fit:cover;display:block;" />
+        </div>
+        <div class="card-text">
+          <div class="card-title">VALORANT</div>
+          <div class="card-sub" id="valSub">Moirai#0000 — tıkla kopyala</div>
+        </div>
+      </div>
+
+      <div class="link-card red no-click" onclick="copyRiotId('Rynxify#VOİD')" style="cursor:pointer;">
+        <div class="card-icon red">
+          <img src="assets/riot-games.jpg" width="20" height="20" style="border-radius:50%;object-fit:cover;display:block;" />
+        </div>
+        <div class="card-text">
+          <div class="card-title">LEAGUE OF LEGENDS</div>
+          <div class="card-sub" id="lolSub">Rynxify#VOİD — tıkla kopyala</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="category-block stagger">
+      <div class="category-header">
+        <span class="category-label" style="color:#a855f7;text-shadow:0 0 8px rgba(168,85,247,0.6);">// Software Services</span>
+        <div class="category-line" style="background:#a855f7;"></div>
+      </div>
+
+      <a class="link-card service-card" href="https://discord.gg/MVDsuz2f8T" target="_blank" rel="noopener">
+        <div class="card-icon" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="1" fill="#a855f7" stroke="none"/><circle cx="15" cy="10" r="1" fill="#a855f7" stroke="none"/><path d="M7 7c1-1 3-1.5 5-1.5S16 6 17 7"/></svg>
+        </div>
+        <div class="card-text">
+          <div class="card-title" style="color:#fff;">DISCORD BOT</div>
+          <div class="card-sub">Özel bot geliştirme · Komut & otomasyon</div>
+        </div>
+        <span class="card-arrow" style="color:#555;">›</span>
+      </a>
+
+      <a class="link-card service-card" href="https://discord.gg/MVDsuz2f8T" target="_blank" rel="noopener">
+        <div class="card-icon" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <div class="card-text">
+          <div class="card-title" style="color:#fff;">WEB TASARIM</div>
+          <div class="card-sub">Modern & responsive site geliştirme</div>
+        </div>
+        <span class="card-arrow" style="color:#555;">›</span>
+      </a>
+
+      <a class="link-card service-card" href="https://discord.gg/MVDsuz2f8T" target="_blank" rel="noopener">
+        <div class="card-icon" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </div>
+        <div class="card-text">
+          <div class="card-title" style="color:#fff;">API ENTEGRASYONU</div>
+          <div class="card-sub">Üçüncü parti servis bağlantıları</div>
+        </div>
+        <span class="card-arrow" style="color:#555;">›</span>
+      </a>
+
+      <a class="link-card service-card" href="https://discord.gg/MVDsuz2f8T" target="_blank" rel="noopener">
+        <div class="card-icon" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        </div>
+        <div class="card-text">
+          <div class="card-title" style="color:#fff;">SUNUCU BAKIMI</div>
+          <div class="card-sub">VPS kurulum · Yönetim & monitoring</div>
+        </div>
+        <span class="card-arrow" style="color:#555;">›</span>
+      </a>
+
+    </div>
+
+    <p class="footer">© 2026 RYNXIFY</p>
+  </div>
+
+  <div class="admin-hint" onclick="openAdmin()">CTRL+SHIFT+A</div>
+  <div class="toast" id="toast">✓ Kopyalandı!</div>
+
+
+  <script>
+    function showToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function copyDiscord() {
+      navigator.clipboard.writeText('rynxify').then(() => {
+        document.getElementById('discordSub').textContent = '✓ kopyalandı!';
+        showToast();
+        setTimeout(() => document.getElementById('discordSub').textContent = 'rynxify — tıkla kopyala', 2000);
+      });
+    }
+
+    function copyRiotId(id) {
+      navigator.clipboard.writeText(id).then(() => {
+        if (id.includes('Moirai')) {
+          document.getElementById('valSub').textContent = '✓ kopyalandı!';
+          setTimeout(() => document.getElementById('valSub').textContent = 'Moirai#0000 — tıkla kopyala', 2000);
+        } else {
+          document.getElementById('lolSub').textContent = '✓ kopyalandı!';
+          setTimeout(() => document.getElementById('lolSub').textContent = 'Rynxify#VOİD — tıkla kopyala', 2000);
+        }
+        showToast();
+      });
+    }
+
+    // ── Music ──
+    function formatTime(s) {
+      if (!s || isNaN(s)) return '0:00';
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    // ── Preloader ──
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('preSub').textContent = 'CLICK TO ENTER';
+        const btn = document.getElementById('preEnter');
+        btn.style.display = 'block';
+        btn.style.animation = 'preFadeIn .6s ease forwards';
+      }, 2000);
+    });
+
+    function enterSite() {
+      const pre = document.getElementById('preloader');
+      pre.classList.add('hide');
+
+      // sayfa animasyonları
+      document.querySelector('.container').classList.add('loaded');
+      document.querySelector('.profile').classList.add('loaded');
+      document.querySelectorAll('.stagger').forEach((el, i) => {
+        setTimeout(() => el.classList.add('loaded'), i * 100);
+      });
+
+      pre.addEventListener('transitionend', () => pre.remove(), { once: true });
+    }
+
+    // ── Particles ──
+    (function() {
+      const canvas = document.getElementById('particleCanvas');
+      const ctx = canvas.getContext('2d');
+      let W, H, particles = [];
+
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      window.addEventListener('resize', resize);
+      resize();
+
+      const COLORS = ['rgba(0,204,255,', 'rgba(0,204,255,', 'rgba(255,0,0,'];
+      function rand(a, b) { return Math.random() * (b - a) + a; }
+
+      function createParticle() {
+        return {
+          x: rand(0, W), y: rand(0, H),
+          r: rand(0.5, 2),
+          vx: rand(-0.3, 0.3), vy: rand(-0.4, -0.1),
+          alpha: rand(0.2, 0.7),
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          life: rand(80, 200), age: 0,
+        };
+      }
+
+      for (let i = 0; i < 40; i++) particles.push(createParticle());
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        particles.forEach((p, i) => {
+          p.age++; p.x += p.vx; p.y += p.vy;
+          const fade = 1 - p.age / p.life;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color + (p.alpha * fade) + ')';
+          ctx.fill();
+          if (p.age >= p.life || p.y < -10) particles[i] = createParticle();
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+
+    // ── Admin shortcut (sadece kısayol, panel yok) ──
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        alert('Düzenleme için index.html dosyasını aç.');
+      }
+    });
+
+    function openAdmin() {}
+
+    // ── Lanyard / Spotify Gerçek Zamanlı ──
+    (function() {
+      const DISCORD_ID = '1450496302382186510';
+      const card       = document.getElementById('nowPlaying');
+      const npTitle    = document.getElementById('npTitle');
+      const npArtist   = document.getElementById('npArtist');
+      const npFill     = document.getElementById('npFill');
+      const npCurrent  = document.getElementById('npCurrent');
+      const npDuration = document.getElementById('npDuration');
+      const npVinyl    = document.getElementById('npVinyl');
+      const npCoverImg = document.getElementById('npCoverImg');
+      const npCoverEmoji = document.getElementById('npCoverEmoji');
+      const npEq       = document.getElementById('npEq');
+
+      let spotifyActive = false;
+      let progressTimer = null;
+      let currentEnd = 0;
+      let currentStart = 0;
+      let trackDuration = 0;
+
+      function showSpotifyCard(data) {
+        const sp = data.spotify;
+        if (!sp) { hideSpotifyCard(); return; }
+
+        spotifyActive = true;
+        card.classList.add('active');
+
+        // Şarkı bilgisi
+        npTitle.textContent  = sp.song   || 'Bilinmiyor';
+        npArtist.textContent = sp.artist || '';
+
+        // Albüm kapağı
+        if (sp.album_art_url) {
+          npCoverImg.src = sp.album_art_url;
+          npCoverImg.style.display = 'block';
+          if (npCoverEmoji) npCoverEmoji.style.display = 'none';
+        } else {
+          npCoverImg.style.display = 'none';
+          if (npCoverEmoji) npCoverEmoji.style.display = 'block';
+        }
+
+        // Vinyl dönsün
+        if (npVinyl) npVinyl.classList.add('spinning');
+        if (npEq)    npEq.classList.remove('paused');
+
+        // Progress hesapla
+        const now = Date.now();
+        currentStart  = sp.timestamps?.start || now;
+        currentEnd    = sp.timestamps?.end   || now;
+        trackDuration = currentEnd - currentStart;
+
+        updateProgress();
+        clearInterval(progressTimer);
+        progressTimer = setInterval(updateProgress, 1000);
+      }
+
+      function updateProgress() {
+        const now     = Date.now();
+        const elapsed = now - currentStart;
+        const pct     = Math.min((elapsed / trackDuration) * 100, 100);
+
+        npFill.style.width       = pct + '%';
+        npCurrent.textContent    = formatTime(elapsed / 1000);
+        npDuration.textContent   = formatTime(trackDuration / 1000);
+      }
+
+      function hideSpotifyCard() {
+        spotifyActive = false;
+        clearInterval(progressTimer);
+        card.classList.remove('active');
+        if (npVinyl)   npVinyl.classList.remove('spinning');
+        if (npEq)      npEq.classList.add('paused');
+      }
+
+      function connectLanyard() {
+        const ws = new WebSocket('wss://api.lanyard.rest/socket');
+
+        ws.addEventListener('open', () => {
+          ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: DISCORD_ID } }));
+        });
+
+        ws.addEventListener('message', e => {
+          const msg = JSON.parse(e.data);
+
+          // Heartbeat
+          if (msg.op === 1) {
+            setInterval(() => ws.readyState === 1 && ws.send(JSON.stringify({ op: 3 })), msg.d.heartbeat_interval);
+          }
+
+          // İlk veri veya güncelleme
+          if (msg.op === 0) {
+            let data = null;
+            if (msg.t === 'INIT_STATE') {
+              data = msg.d[DISCORD_ID] || msg.d;
+            } else if (msg.t === 'PRESENCE_UPDATE') {
+              data = msg.d;
+            }
+            if (data) {
+              if (data.spotify) showSpotifyCard(data);
+              else hideSpotifyCard();
+            }
+          }
+        });
+
+        ws.addEventListener('close', () => {
+          // Bağlantı kopunca 3 saniye sonra yeniden bağlan
+          setTimeout(connectLanyard, 3000);
+        });
+
+        ws.addEventListener('error', () => ws.close());
+      }
+
+      connectLanyard();
+    })();
+  </script>
+  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "a2f48937012049f6a07886be974e15f7"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
